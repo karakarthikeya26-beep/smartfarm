@@ -1,9 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Only create Supabase client if credentials are provided
+export const supabase = supabaseUrl && supabaseKey 
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 export interface FarmProfile {
   id?: string;
@@ -59,9 +62,19 @@ export interface WeatherLog {
 }
 
 export class SupabaseService {
+  private checkSupabaseConnection(): boolean {
+    if (!supabase) {
+      console.warn('Supabase client not initialized. Please check your environment variables.');
+      return false;
+    }
+    return true;
+  }
+
   // Farm Profile Operations
   async createFarmProfile(profile: Omit<FarmProfile, 'id' | 'created_at' | 'updated_at'>): Promise<FarmProfile | null> {
     try {
+      if (!this.checkSupabaseConnection()) return null;
+
       const { data, error } = await supabase
         .from('farm_profiles')
         .insert([profile])
@@ -78,6 +91,8 @@ export class SupabaseService {
 
   async updateFarmProfile(id: string, updates: Partial<FarmProfile>): Promise<FarmProfile | null> {
     try {
+      if (!this.checkSupabaseConnection()) return null;
+
       const { data, error } = await supabase
         .from('farm_profiles')
         .update({ ...updates, updated_at: new Date().toISOString() })
@@ -95,6 +110,8 @@ export class SupabaseService {
 
   async getFarmProfile(userId: string): Promise<FarmProfile | null> {
     try {
+      if (!this.checkSupabaseConnection()) return null;
+
       const { data, error } = await supabase
         .from('farm_profiles')
         .select('*')
@@ -112,6 +129,8 @@ export class SupabaseService {
   // Crop Operations
   async addCrop(crop: Omit<CropData, 'id' | 'created_at'>): Promise<CropData | null> {
     try {
+      if (!this.checkSupabaseConnection()) return null;
+
       const { data, error } = await supabase
         .from('crops')
         .insert([crop])
@@ -128,6 +147,8 @@ export class SupabaseService {
 
   async getCrops(farmId: string): Promise<CropData[]> {
     try {
+      if (!this.checkSupabaseConnection()) return [];
+
       const { data, error } = await supabase
         .from('crops')
         .select('*')
@@ -144,6 +165,8 @@ export class SupabaseService {
 
   async updateCrop(id: string, updates: Partial<CropData>): Promise<CropData | null> {
     try {
+      if (!this.checkSupabaseConnection()) return null;
+
       const { data, error } = await supabase
         .from('crops')
         .update(updates)
@@ -162,6 +185,8 @@ export class SupabaseService {
   // Irrigation Logs
   async logIrrigation(log: Omit<IrrigationLog, 'id' | 'created_at'>): Promise<IrrigationLog | null> {
     try {
+      if (!this.checkSupabaseConnection()) return null;
+
       const { data, error } = await supabase
         .from('irrigation_logs')
         .insert([log])
@@ -178,6 +203,8 @@ export class SupabaseService {
 
   async getIrrigationLogs(farmId: string, days: number = 7): Promise<IrrigationLog[]> {
     try {
+      if (!this.checkSupabaseConnection()) return [];
+
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
@@ -199,6 +226,8 @@ export class SupabaseService {
   // Weather Logs
   async logWeather(log: Omit<WeatherLog, 'id' | 'created_at'>): Promise<WeatherLog | null> {
     try {
+      if (!this.checkSupabaseConnection()) return null;
+
       const { data, error } = await supabase
         .from('weather_logs')
         .insert([log])
@@ -215,6 +244,8 @@ export class SupabaseService {
 
   async getWeatherLogs(farmId: string, days: number = 30): Promise<WeatherLog[]> {
     try {
+      if (!this.checkSupabaseConnection()) return [];
+
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
@@ -236,6 +267,8 @@ export class SupabaseService {
   // File Upload
   async uploadFile(file: File, bucket: string, path: string): Promise<string | null> {
     try {
+      if (!this.checkSupabaseConnection()) return null;
+
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(path, file, {
@@ -258,6 +291,8 @@ export class SupabaseService {
 
   async deleteFile(bucket: string, path: string): Promise<boolean> {
     try {
+      if (!this.checkSupabaseConnection()) return false;
+
       const { error } = await supabase.storage
         .from(bucket)
         .remove([path]);
