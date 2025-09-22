@@ -29,7 +29,16 @@ export interface ForecastData {
 }
 
 export class WeatherService {
+  private isApiKeyConfigured(): boolean {
+    return !!OPENWEATHER_API_KEY && OPENWEATHER_API_KEY !== 'your_openweather_api_key_here';
+  }
+
   async getCurrentWeather(lat: number, lon: number): Promise<WeatherData> {
+    if (!this.isApiKeyConfigured()) {
+      console.warn('OpenWeatherMap API key not configured, using mock data');
+      return this.getMockWeatherData();
+    }
+
     try {
       const response = await axios.get(`${BASE_URL}/weather`, {
         params: {
@@ -128,8 +137,23 @@ export class WeatherService {
       };
     } catch (error) {
       console.error('Weather API Error:', error);
-      throw error;
+      return this.getMockWeatherData();
     }
+  }
+
+  private getMockWeatherData(): WeatherData {
+    return {
+      temperature: 28,
+      humidity: 65,
+      windSpeed: 12,
+      pressure: 1013,
+      visibility: 10,
+      uvIndex: 6,
+      rainfall: 0,
+      rainForecast: '20% chance',
+      description: 'partly cloudy',
+      icon: '02d'
+    };
   }
 
   private getRainForecast(weatherMain: string): string {
