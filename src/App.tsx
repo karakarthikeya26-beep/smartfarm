@@ -21,6 +21,7 @@ import MarketInsights from './components/MarketInsights';
 import IrrigationSchedule from './components/IrrigationSchedule';
 import Alerts from './components/Alerts';
 import SustainablePractices from './components/SustainablePractices';
+import VoiceChat from './components/VoiceChat';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -130,6 +131,9 @@ function App() {
           </main>
         </div>
       </div>
+      
+      {/* Voice Chat Component */}
+      <VoiceChat onNavigate={setActiveTab} />
     </div>
   );
 }
